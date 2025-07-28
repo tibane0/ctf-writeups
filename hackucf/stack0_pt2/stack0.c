@@ -6,7 +6,7 @@
 
 
 /* Filename of the first flag */
-static const char* flagfile = "flag1.txt";
+static const char* flagfile = "flag1.txt"; // change to flag2.txt
 
 /* Send the user the contents of the first flag file. */
 static void giveFlag(void) {
