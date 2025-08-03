@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for i in $(seq 1 30); do
-    #printf "%%%d\$p => " "$i"
+for i in $(seq 1 100); do
+    printf "\n\nTRY NUM : %%%d => \n" "$i"
     printf "%%%d\$p\n" "$i" | ./logmein
 done

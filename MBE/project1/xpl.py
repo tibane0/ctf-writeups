@@ -1,8 +1,8 @@
-#!/bin/python3
+#!/usr/bin/env python3
 from pwn import *
 import sys
 
-binary = ""
+binary = "./tw33tchainz"
 elf = context.binary = ELF(binary, False)
 context.terminal = ["terminator", "-x", "bash", "-c"]
 context.log_level  = 'debug'
@@ -58,9 +58,10 @@ def main():
     ### EXPLOIT CODE ###
     ####################
     
-    #io = start()
-    pass
+    io = start()
+    
 
 
 if __name__ == "__main__":
     main()
+

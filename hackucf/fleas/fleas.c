@@ -45,7 +45,7 @@ typedef void speak_func(Dog*);
 struct Dog {
 	char* name; // what is the size of this variable
 	speak_func* speak;
-	int fleas[DOG_NUMPARTS];
+	int fleas[DOG_NUMPARTS];        
 };
 
 
@@ -121,7 +121,7 @@ int main(void) {
 	}
 	
 	// change the out of bound
-	// flea_location = 1 ; flea_count =dog3_speack ; name = /bin/sh
+	// flea_location = 1 ; flea_count = dog3_speack ; name = /bin/sh
 	dog1->fleas[flea_location-1] = flea_count;
 	
 	say("Thanks for the information, Bob!\n");

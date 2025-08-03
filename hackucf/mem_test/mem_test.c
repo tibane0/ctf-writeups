@@ -5,7 +5,7 @@
 
 const char* hint = "//bin/sh";
 
-void mem_test(char* p) {
+void mem_test(char* random) {
 	char buff[11];
 	memset(buff, '\0', sizeof(buff));
 	
@@ -16,7 +16,7 @@ void mem_test(char* p) {
 	printf("> ");
 	scanf("%s", buff);
 	
-	if(strncmp(buff, p, sizeof(p)) != 0) {
+	if(strncmp(buff, random, sizeof(random)) != 0) {
 		puts("sorry, your memory sucks\n");
 	}
 	else {
